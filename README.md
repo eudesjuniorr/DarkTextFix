@@ -30,9 +30,11 @@ Both modes preserve the original hue and saturation — only lightness is adjust
 
 ## Installation
 
-1. Download `DarkTextFix-1.0.jar` from [Releases](../../releases)
+1. Download the latest `DarkTextFix-*.jar` from [Releases](../../releases)
 2. Place it in your `.minecraft/mods/` folder
 3. Launch the game — a config file will be created at `config/darktextfix.cfg`
+
+This is a coremod, so it will not appear in the in-game mods list.
 
 ### Requirements
 
@@ -79,7 +81,7 @@ javac -cp "lib/asm-9.7.1.jar;lib/asm-tree-9.7.1.jar;path/to/forge-universal.jar;
   -d build/classes --release 8 \
   src/main/java/darktext/*.java
 
-jar cfm DarkTextFix-1.0.jar src/main/resources/META-INF/MANIFEST.MF \
+jar cfm DarkTextFix.jar src/main/resources/META-INF/MANIFEST.MF \
   -C build/classes .
 ```
 
