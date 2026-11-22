@@ -11,9 +11,16 @@ public class DarkTextHelper {
 
     /**
      * Context flag set by ASM-patched GuiContainer around
-     * drawGuiContainerForegroundLayer()
+     * drawGuiContainerForegroundLayer() and by ModularUI2's draw entry points.
      */
     public static boolean inContainerGui = false;
+
+    /**
+     * Suppression flag set by ASM around the FontRenderer call inside
+     * RenderItem.renderItemOverlayIntoGUI(), so stack counts and durability
+     * text stay untouched inside container GUIs.
+     */
+    public static boolean inItemOverlay = false;
 
     // Pre-computed sRGB linearization table (avoids Math.pow in hot path)
     private static final float[] LINEAR_TABLE = new float[256];
@@ -48,9 +55,27 @@ public class DarkTextHelper {
     public static int fixColor(int color) {
         if (!initialized)
             init();
-        if (!DarkTextConfig.enabled || !inContainerGui)
+        if (!DarkTextConfig.enabled || !inContainerGui || inItemOverlay)
             return color;
 
+        return applyFix(color);
+    }
+
+    /**
+     * Entry point for ModularUI2's TextRenderer, which is only used by GUIs.
+     * This does not depend on the container context flag being set around the
+     * exact draw call; some ModularUI2 screens draw outside the flagged scope.
+     */
+    public static int fixColorForGui(int color) {
+        if (!initialized)
+            init();
+        if (!DarkTextConfig.enabled)
+            return color;
+
+        return applyFix(color);
+    }
+
+    private static int applyFix(int color) {
         return DarkTextConfig.mode.equals("contrast")
                 ? contrastFix(color)
                 : invertFix(color);
@@ -64,8 +89,11 @@ public class DarkTextHelper {
         int rgb = color & 0x00FFFFFF;
         int r = (rgb >> 16) & 0xFF, g = (rgb >> 8) & 0xFF, b = rgb & 0xFF;
 
-        // Fast exit: any bright component means color is fine
-        if ((r | g | b) > DarkTextConfig.brightnessSkip)
+        // Fast exit: only skip when every component is bright. Using the OR/max
+        // here would skip dark saturated colors such as 0x0000AA (dark blue),
+        // which are exactly the ones that need lightening on a dark background.
+        int skip = DarkTextConfig.brightnessSkip;
+        if (r > skip && g > skip && b > skip)
             return color;
 
         // RGB -> HSL (inline for speed)

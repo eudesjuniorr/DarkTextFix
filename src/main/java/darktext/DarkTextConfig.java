@@ -172,7 +172,8 @@ public class DarkTextConfig {
                 w.println("# Max lightness after inversion. [default: 0.93]");
                 w.println("D:maxLightness=" + maxLightness);
                 w.println();
-                w.println("# Fast-path: skip colors with any RGB > this value. [default: 140]");
+                w.println("# Fast-path: skip colors whose R, G and B are all > this value.");
+                w.println("# Dark saturated colors (e.g. 0000AA) are still corrected. [default: 140]");
                 w.println("I:brightnessSkip=" + brightnessSkip);
                 w.println();
 
